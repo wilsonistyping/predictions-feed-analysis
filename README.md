@@ -16,7 +16,7 @@ Windows: `.env/Scripts/activate`
 (This should download a pretrained model and output a sentiment analysis result, like this:
 [{'label': 'POSITIVE', 'score': 0.9998704791069031}])
 
---- OPTIONAL ---
+## --- OPTIONAL ---
 For the models to use GPU power instead of CPU power, we need CUDA installed.
 (THIS ONLY WORKS FOR WINDOWS, not MacOS.)
 https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64&target_version=11&target_type=exe_local
@@ -29,6 +29,5 @@ To check if CUDA is installed:
 
 ---
 Resources:
-https://www.youtube.com/watch?v=QEaBAZQCtwE
 https://huggingface.co/docs/transformers/installation
 ---
