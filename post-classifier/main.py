@@ -7,7 +7,7 @@ sentiment_classifier = pipeline("sentiment-analysis")
 zero_shot_classifier = pipeline("zero-shot-classification")
 
 def analyze_type(text):
-    # Define candidate prediction types based on CSV categories
+    hypothesis_template = "The post uses {} to back up its claims."
     type_labels = [
         "astrology",
         "tarot",
@@ -19,25 +19,27 @@ def analyze_type(text):
         "crowd sentiment",
         "historical event reasoning",
     ]
-    type_result = zero_shot_classifier(text, type_labels)
+    type_result = zero_shot_classifier(text, type_labels, hypothesis_template=hypothesis_template)
     return type_result['labels'][0:2], type_result['scores'][0:2]
 
 def analyze_prediction(text):
+    hypothesis_template = "This post makes a {}"
     prediction_labels = [
         "prediction",
         "not a prediction"
     ]
 
-    prediction_result = zero_shot_classifier(text, prediction_labels)
+    prediction_result = zero_shot_classifier(text, prediction_labels, hypothesis_template=hypothesis_template)
     return prediction_result['labels'][0], prediction_result['scores'][0]
 
 def analyze_certainty(text):
+    hypothesis_template = "The creator of this post is making an assertion with {} certainty."
     certainty_labels = [
         "high certainty",
         "medium certainty",
         "low certainty"
     ]
-    certainty_result = zero_shot_classifier(text, certainty_labels)
+    certainty_result = zero_shot_classifier(text, certainty_labels, hypothesis_template=hypothesis_template)
     return certainty_result['labels'][0], certainty_result['scores'][0]
 
 def process_document(input_file):
@@ -45,7 +47,7 @@ def process_document(input_file):
     df = pd.read_csv(input_file)
     # Can comment this next line out, it's mostly for debugging the column keys
     print("Available columns:", df.columns.tolist())
-    
+
     # Initialize lists to store results
     content_types = []
     content_types_confidences = []
@@ -56,9 +58,9 @@ def process_document(input_file):
     certainty_levels = []
     certainty_confidences = []
     sentiments = []
-    
+
     # Process each text entry
-    for text in df['Text of post']: 
+    for text in df['Text of post']:
         print(text)
         # If the text is empty or nan, skip it
         if pd.isna(text):
@@ -95,11 +97,11 @@ def process_document(input_file):
         certainty, certainty_confidence = analyze_certainty(text)
         certainty_levels.append(certainty)
         certainty_confidences.append(certainty_confidence)
-        
+
         # Get sentiment
         sentiment = sentiment_classifier(text)[0]
         sentiments.append(sentiment['label'])
-    
+
     # Add new columns to DataFrame
     df['content_type'] = content_types
     df['content_type_confidence'] = content_types_confidences
@@ -109,18 +111,18 @@ def process_document(input_file):
 
     df['certainty_level'] = certainty_levels
     df['certainty_confidence'] = certainty_confidences
-    
+
     df['sentiment'] = sentiments
-    
+
     # Combine stuff into a nested structure
     df['content'] = df.apply(lambda row: [{'type': row['content_type'], 'confidence': row['content_type_confidence']}], axis=1)
     df['is_prediction'] = df.apply(lambda row: [{'is_a_prediction': row['is_a_prediction'], 'prediction_confidence': row['prediction_confidence']}], axis=1)
     df['certainty'] = df.apply(lambda row: [{'certainty_level': row['certainty_level'], 'certainty_confidence': row['certainty_confidence']}], axis=1)
-    
+
 
     # Select relevant columns for output
     output_df = df[['Platform', 'Text of post', 'Link to post', 'content', 'is_prediction', 'certainty', 'sentiment']]
-    
+
     # Export to JSON
     output_df.to_json("output/gali-prediction_analysis.json", orient='records', indent=2)
     return output_df
