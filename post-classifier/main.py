@@ -19,7 +19,7 @@ def analyze_type(text):
         "crowd sentiment",
         "historical event reasoning",
     ]
-    type_result = zero_shot_classifier(text, type_labels, hypothesis_template=hypothesis_template)
+    type_result = zero_shot_classifier(text, type_labels, hypothesis_template=hypothesis_template, multi_class=True)
     return type_result['labels'][0:2], type_result['scores'][0:2]
 
 def analyze_prediction(text):
